@@ -130,7 +130,6 @@ public class GroupDialogFragment extends Fragment {
         return view;
     }
 
-// comment! This is new
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
