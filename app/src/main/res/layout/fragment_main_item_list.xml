@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.RecyclerView
+    android:id="@+id/main_list"
+    android:name="com.example.danielandersson.ragestats.ui.fragment.MainItemFragment"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.danielandersson.ragestats.ui.activites.MainActivity"
+    tools:showIn="@layout/activity_main"
+
+    app:layoutManager="LinearLayoutManager"
+    tools:listitem="@layout/fragment_main_student_item"/>

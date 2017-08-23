@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "687336147345",
+    "firebase_url": "https://ragenotes.firebaseio.com",
+    "project_id": "ragenotes",
+    "storage_bucket": "ragenotes.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687336147345:android:7ebaf8c9d9703ac3",
+        "android_client_info": {
+          "package_name": "com.example.danielandersson.ragestats"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687336147345-3jf29jpttbq65kvifi50svqfa4nr58er.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCR0dLH_tlSJa37AbyITyRMd2A1xcM6Pl8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

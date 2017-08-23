@@ -1,0 +1,125 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="400dp"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              tools:background="@color/colorPrimary"
+              android:orientation="vertical"
+              tools:context="com.example.danielandersson.ragestats.ui.fragment.LongStatisticsFragment">
+
+    <TextView
+        android:id="@+id/month_view_long_graph"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/date_headline_style"
+        android:gravity="center"
+        tools:text="August"/>
+
+
+    <com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
+        android:id="@+id/seekbar_time_range_long_graph"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:min_value="0"
+        app:max_value="24"
+        android:layout_marginStart="22dp"
+        android:layout_marginEnd="22dp"
+        app:bar_highlight_color="#609bff"
+        app:left_thumb_color="#4489FE"
+        app:right_thumb_color="#4489FE"
+        app:left_thumb_color_pressed="#2b3fd2"
+        app:right_thumb_color_pressed="#2b3fd2"
+
+
+        />
+
+
+
+
+    <LinearLayout
+        android:layout_marginStart="22dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+
+
+        >
+
+        <TextView
+            android:id="@+id/hour_long_graph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textColor="@color/color_white"
+            android:textSize="32sp"
+            tools:text="07"
+
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textColor="@color/color_white"
+            android:layout_gravity="top"
+
+            android:textSize="22sp"
+            android:paddingTop="2dp"
+            android:text="00"
+
+
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textColor="@color/color_white"
+            android:layout_gravity="top"
+
+            android:text=" - "
+            android:textSize="32sp"
+
+
+            />
+
+        <TextView
+            android:id="@+id/hour_end_long_graph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/color_white"
+
+
+            android:textSize="32sp"
+            tools:text="16"
+
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textColor="@color/color_white"
+            android:layout_gravity="top"
+            android:gravity="top"
+            android:textSize="22sp"
+            android:paddingTop="2dp"
+
+            android:text="00"
+
+
+            />
+
+    </LinearLayout>
+
+
+
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/bar_chart"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"/>
+
+
+
+
+
+
+</LinearLayout>

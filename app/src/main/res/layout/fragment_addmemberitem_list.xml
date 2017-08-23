@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    android:id="@+id/group_fragment_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:background="@color/color_background_shadow"
+    android:elevation="10dp">
+
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@color/color_white"
+        android:elevation="12dp"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/group_name_edittext"
+            style="@style/name_edittext_style"
+
+            android:hint="@string/label_group_name"
+
+            />
+
+        <SearchView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="4dp"
+            android:padding="4dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="16dp"
+            android:text="@string/label_members"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="16sp"/>
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/list"
+            android:name="com.example.danielandersson.ragestats.AddMemberItemFragment"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginRight="16dp"
+            app:layoutManager="LinearLayoutManager"
+            tools:context=".ui.fragment.GroupDialogFragment"
+            tools:listitem="@layout/fragment_addmemberitem"/>
+
+        <Button
+            android:id="@+id/group_add_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:background="#00ffff00"
+            android:text="@string/label_add"
+            android:textColor="@color/colorPrimaryDark"
+
+            />
+    </LinearLayout>
+
+</FrameLayout>
+

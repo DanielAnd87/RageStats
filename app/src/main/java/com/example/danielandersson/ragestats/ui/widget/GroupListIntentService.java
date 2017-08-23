@@ -3,9 +3,7 @@ package com.example.danielandersson.ragestats.ui.widget;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Binder;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
@@ -50,16 +48,18 @@ public class GroupListIntentService extends RemoteViewsService {
 
             @Override
             public void onCreate() {
-                mContext= getApplicationContext();
+                mContext = getApplicationContext();
                 mGroup = new Group();
 //                String groupKey = GroupListWidgetConfigureActivity.loadTitlePref(getApplicationContext(), mAppId);
                 Log.i(TAG, "onCreate: Widget Service has started!");
-                String groupKey = "-KqJTio7hIsv-1lboLAs";
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 //                SharedPreferences preferences = getSharedPreferences( getPackageName() + "_preferences", MODE_PRIVATE);
                 mFirebaseDatabase = FirebaseDatabase.getInstance();
+                String groupKey = "-KqJTio7hIsv-1lboLAs";
 
-                fetchData(groupKey);
+                if (getCount() == 0) {
+                    fetchData(groupKey);
+                }
             }
 
             @Override
@@ -70,11 +70,15 @@ public class GroupListIntentService extends RemoteViewsService {
                 // that calls use our process and permission
                 final long identityToken = Binder.clearCallingIdentity();
                 // TODO: 2017-08-16 get the correct group from configure activity
-
+                Log.i(TAG, "onDataSetChanged: ");
+                if (getCount() == 0) {
+                Log.i(TAG, "onDataSetChanged: " +
+                        "zero items in list!");
+                    String groupKey = "-KqJTio7hIsv-1lboLAs";
+                    fetchData(groupKey);
+                }
 
                 // TODO: 2017-08-09 use firebase db implementation
-
-
 
                 Binder.restoreCallingIdentity(identityToken);
             }
@@ -91,11 +95,14 @@ public class GroupListIntentService extends RemoteViewsService {
             @Override
             public RemoteViews getViewAt(int position) {
                 if (position == AdapterView.INVALID_POSITION ||
-                        mGroup == null || mGroup.getStudents().size()>=position) {
+                        mGroup == null || position >= mGroup.getStudents().size()) {
                     return null;
                 }
 
                 final Student student = mGroup.getStudents().get(position);
+                Log.i(TAG, "getViewAt: " +
+                        "Current widget name is " +
+                        student.getName());
                 // Construct the RemoteViews object for the list
                 RemoteViews views = new RemoteViews(getApplicationContext().getPackageName(), R.layout.fragment_main_student_item);
 
@@ -104,7 +111,6 @@ public class GroupListIntentService extends RemoteViewsService {
                 // TODO: 2017-08-16 add clickListerners
 //                views.setTextViewText(R.id.smiley_button_main, student.getMeasure());
 //                views.setTextViewText(R.id.comment_button_main, student.getQuantity() + "");
-
 
                 return views;
             }
@@ -134,8 +140,6 @@ public class GroupListIntentService extends RemoteViewsService {
 
 
     public void fetchData(String groupKey) {
-        final DatabaseReference reference = mFirebaseDatabase.getReference("/members/" + mMyMemeberKey);
-
 
         final DatabaseReference reference1 = mFirebaseDatabase.getReference(Constants.PATH_GROUP + "/" + groupKey + "/");
         reference1.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -156,12 +160,11 @@ public class GroupListIntentService extends RemoteViewsService {
                         final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
                         });
                         mGroup.setStudents((ArrayList<Student>) studentList);
+                        for (Student student : studentList) {
+                        Log.i(TAG, "onDataChange: "+ student.getName());
+                        }
 
-                        Intent updateWidgetIntent = new Intent(mContext,
-                                GroupListWidget.class);
-                        updateWidgetIntent.setAction(
-                                GroupListWidget.ACTION_DATA_UPDATED);
-                        mContext.sendBroadcast(updateWidgetIntent);
+                        GroupListWidget.sendUpdateBroadcast(mContext);
                     }
 
                     @Override
@@ -180,4 +183,5 @@ public class GroupListIntentService extends RemoteViewsService {
 
 
     }
+
 }

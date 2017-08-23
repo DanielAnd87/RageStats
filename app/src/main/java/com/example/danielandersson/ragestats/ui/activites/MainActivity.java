@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -149,8 +148,6 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 final Group group = dataSnapshot.getValue(Group.class);
-                                Log.i(TAG, "onDataChange: "
-                                        + group.getGroupName());
                                 final String key = dataSnapshot.getKey();
                                 group.setGroupKey(key);
 

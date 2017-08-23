@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout style="@style/main_item_card_style"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+    >
+
+    <TextView
+        android:id="@+id/group_label_textview"
+        style="@style/main_name_label_style"
+
+        android:textAppearance="?attr/textAppearanceListItem"
+        tools:text="Erik Bengtsson"
+
+        />
+
+
+    <Button
+        android:id="@+id/edit_button_main"
+
+        style="@style/circle_btn_style"
+
+        android:background="@mipmap/edit_icon"
+
+        />
+</LinearLayout>

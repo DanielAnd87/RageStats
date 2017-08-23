@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/block_background"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="70dp"
+              android:layout_height="300dp"
+              android:orientation="vertical"
+              tools:background="@color/colorPrimaryDark">
+
+    <com.example.danielandersson.ragestats.VerticalSeekBar
+        android:id="@+id/seekBar2"
+        style="@style/tallerBarStyle"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="5"
+        android:progressDrawable="@color/colorAccent"
+        android:thumb="@drawable/seek_bar_background"
+        />
+
+
+    <TextView
+        android:id="@+id/time_block"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textColor="@color/color_white"
+        android:textSize="16sp"
+        tools:text="10:30"/>
+
+
+</LinearLayout>

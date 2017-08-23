@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              style="@style/main_item_card_style">
+
+    <TextView
+        android:id="@+id/student_name_main_list"
+
+        tools:text="Erik Bengtsson"
+        style="@style/main_name_label_style"/>
+
+    <Button
+        android:id="@+id/smiley_button_main"
+        android:background="@mipmap/happy_smiley"
+        style="@style/circle_btn_style"/>
+    <Button
+        android:id="@+id/comment_button_main"
+        style="@style/circle_btn_style"
+        android:background="@mipmap/comment_icon"/>
+
+</LinearLayout>

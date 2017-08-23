@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="400dp"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/weekday_label_block_fragment"
+        style="@style/date_headline_style"
+
+        tools:text="Thursday Agust 21"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/block_list"
+        android:name="com.example.danielandersson.ragestats.BlockGraphItemFragment"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:orientation="horizontal"
+        app:layoutManager="LinearLayoutManager"
+        tools:context=".ui.fragment.BlockGraphItemFragment"
+        tools:listitem="@layout/fragment_block_graph_item"/>
+</LinearLayout>

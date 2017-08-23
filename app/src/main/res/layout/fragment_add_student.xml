@@ -1,0 +1,42 @@
+<FrameLayout
+android:id="@+id/student_fragment_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_background_shadow">
+
+
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@color/color_white"
+        android:elevation="10dp"
+        android:orientation="vertical"
+        tools:context=".ui.fragment.AddStudentFragment">
+
+        <EditText
+            android:id="@+id/student_name_edittext"
+            style="@style/name_edittext_style"
+
+            android:hint="@string/label_student_name"
+
+            />
+
+        <Spinner
+            android:id="@+id/student_add_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/student_add_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:background="#00ffffff"
+            android:text="@string/label_add"
+            android:textColor="@color/colorPrimaryDark"
+            />
+    </LinearLayout>
+</FrameLayout>
