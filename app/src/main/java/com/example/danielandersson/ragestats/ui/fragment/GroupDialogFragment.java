@@ -17,7 +17,6 @@ import com.example.danielandersson.ragestats.R;
 import com.example.danielandersson.ragestats.ui.adapters.MyAddMemberItemRecyclerViewAdapter;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -112,7 +111,7 @@ public class GroupDialogFragment extends Fragment {
 
                 mGroup.setGroupName(mEditText.getText().toString());
                 if (mIsUpdating) {
-                    mListener.onConfirmUpdateGroup(mGroup.getGroupKey(), mGroup.getGroupName(), mGroup.getMembers());
+                    mListener.onConfirmUpdateGroup(mGroup);
                 } else {
 
                     mListener.onConfirmInsertGroup(mGroup);
@@ -160,6 +159,6 @@ public class GroupDialogFragment extends Fragment {
     public interface OnComfirmed {
         void onConfirmInsertGroup(Group group);
 
-        void onConfirmUpdateGroup(String key, String name, List<String> members);
+        void onConfirmUpdateGroup(Group group);
     }
 }

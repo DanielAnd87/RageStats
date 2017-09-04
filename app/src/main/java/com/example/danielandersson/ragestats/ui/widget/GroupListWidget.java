@@ -25,6 +25,7 @@ public class GroupListWidget extends AppWidgetProvider {
 
 
     public static final String ACTION_DATA_UPDATED = "data_updated";
+    private static final String ACTION_UPVOTE_SMILEY = "smiley_upvote";
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
@@ -116,12 +117,16 @@ public class GroupListWidget extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
+
         if (intent.getAction().equals(ACTION_DATA_UPDATED)) {
             Log.i(TAG, "onReceive: Updating widget");
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(
                     new ComponentName(context, getClass()));
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list);
+        } else if (intent.getAction().equals(ACTION_UPVOTE_SMILEY)) {
+            // TODO: 2017-08-23 save to database
+
         }
         // TODO: 2017-08-09 when user clicks items: do action
     }

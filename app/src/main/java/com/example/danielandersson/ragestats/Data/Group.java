@@ -17,6 +17,8 @@ public class Group implements Parcelable {
     private ArrayList<String> mMembers;
     private String mGroupKey;
     private ArrayList<Student> mStudents = new ArrayList<>();
+// TODO: 2017-09-04 add students as a set instead. Need to whipe all students from db.
+//    private HashMap<String, Boolean> mStudentKeys;
     private Map<String, Boolean> mMembersMap = new HashMap<>();
     private String mStudentListKey;
     private Group mGroup;

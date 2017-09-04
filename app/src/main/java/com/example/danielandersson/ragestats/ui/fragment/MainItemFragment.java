@@ -113,6 +113,8 @@ public class MainItemFragment extends Fragment {
         void pairAdapters(MyMainItemRecyclerViewAdapter adapter);
 
         void startCommentDialog(int studentIndex);
+
+        void saveSmiley(int smileyIndex, Group group);
     }
 
 }

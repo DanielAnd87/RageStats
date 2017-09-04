@@ -161,6 +161,7 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                                     mSmileyIndex = 0;
                                 }
                                 holderStudents.mSmileyBtn.setBackground(mContext.getDrawable(mSmileySrc[mSmileyIndex]));
+                                mListener.saveSmiley(mSmileyIndex, group);
                             }
                         });
                     }
