@@ -27,7 +27,8 @@
 
             />
 
-        <SearchView
+        <android.support.v7.widget.SearchView
+            android:id="@+id/group_search_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:elevation="4dp"
@@ -42,7 +43,6 @@
             android:text="@string/label_members"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="16sp"/>
-
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/list"

@@ -17,6 +17,17 @@ public class Comment {
     private String mDate;
     private String mTime;
     private String mStudentKey;
+    private String mCommentKey;
+
+    @Exclude
+    public String getCommentKey() {
+        return mCommentKey;
+    }
+
+    @Exclude
+    public void setCommentKey(String commentKey) {
+        mCommentKey = commentKey;
+    }
 
     public Comment(String comment, long timeStamp, String memberName) {
         mComment = comment;

@@ -204,11 +204,16 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
         return mSize;
     }
 
-    public void addGroup(Group group) {
+    public boolean addGroup(Group group) {
         final int groupSize = mGroups.size();
+
+        for (Group currentGroup : mGroups) {
+            if (currentGroup.getGroupKey().equals(group.getGroupKey())) return false;
+        }
         mGroups.add(0, group);
         indexGroups();
         notifyDataSetChanged();
+        return true;
     }
 
     public void updateGroup(String key, String name) {
@@ -254,6 +259,7 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
     }
 
     public void addStudents(List<Student> studentList, String groupKey) {
+
         for (Group group : mGroups) {
             if (group.getGroupKey().equals(groupKey)) {
                 group.setStudents((ArrayList<Student>) studentList);

@@ -27,22 +27,22 @@ import com.example.danielandersson.ragestats.Data.Constants;
 import com.example.danielandersson.ragestats.Data.StatData;
 import com.example.danielandersson.ragestats.Data.Student;
 import com.example.danielandersson.ragestats.R;
+import com.example.danielandersson.ragestats.StatDatabaseHelper;
 import com.example.danielandersson.ragestats.Utils;
 import com.example.danielandersson.ragestats.ui.adapters.CommentsAdapter;
 import com.example.danielandersson.ragestats.ui.fragment.BlockGraphItemFragment;
 import com.example.danielandersson.ragestats.ui.fragment.LongStatisticsFragment;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class StatisticsActivity extends AppCompatActivity implements BlockGraphItemFragment.OnListFragmentInteractionListener, LongStatisticsFragment.OnFragmentInteractionListener {
+public class StatisticsActivity extends AppCompatActivity
+        implements
+        BlockGraphItemFragment.OnListFragmentInteractionListener,
+        LongStatisticsFragment.OnFragmentInteractionListener,
+        StatDatabaseHelper.OnDatabaseResultListerner {
 
     private static final String BLOCK_TAG = BlockGraphItemFragment.class.getSimpleName();
     private static final String LONG_TAG = LongStatisticsFragment.class.getSimpleName();
@@ -51,22 +51,23 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
     private FragmentTransaction mTransaction;
     private EditText mCommentEdittext;
     private TextView mTimeTextView;
-    private FirebaseDatabase mDatabase;
     private int mIndex;
-    private Student mStudent;
     private long mTimestamp;
     private boolean hasBeenSavedToday;
     private int mDatePos;
     private String mGroupKey;
     private String mStudentKey;
     private List<StatData> mStatDatas;
-    private int mDataListIndex;
-    private SharedPreferences mSharedPreferences;
-    private StatData mStatData;
+    private Student mStudent;
+
+
     private BlockGraphItemFragment mBlockFragment;
     private LongStatisticsFragment mLongFragment;
+    private SharedPreferences mSharedPreferences;
+    private StatData mStatData;
     private ArrayAdapter<String> mSpinnerAdapter;
     private CommentsAdapter mAdapter;
+    private StatDatabaseHelper mStatDatabaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +85,6 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
 
         mSharedPreferences = getPreferences(Context.MODE_PRIVATE);
 
-        mDataListIndex = mSharedPreferences.getInt(Constants.LAST_DATA_INDEX + mStudent.getStatDataKey(), 0);
-
-
         mCommentEdittext = (EditText) findViewById(R.id.comment_edittext);
         mTimeTextView = (TextView) findViewById(R.id.comment_time_label);
 
@@ -94,68 +92,16 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
             mCommentEdittext.requestFocus();
         }
 
-        // FIXME: 2017-07-18 correct when I have data
 
-        mDatabase = FirebaseDatabase.getInstance();
+        toolbar.setTitle(mStudent.getName());
 
-        final DatabaseReference dataReference = mDatabase.getReference();
-        dataReference.child("statData").child(mStudent.getStatDataKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // adding data member list
-                mStatDatas = dataSnapshot.getValue(new GenericTypeIndicator<List<StatData>>() {
-                });
-
-                toolbar.setTitle(mStudent.getName());
-
-                // FIXME: 2017-08-01 return the same saved blocks as the day before
-                if (hasStartFragnent) {
-                    mBlockFragment = (BlockGraphItemFragment) mFragmentManager.findFragmentByTag(BLOCK_TAG);
-                    if (mStatDatas == null) {
-                        mStatData = new StatData("", 0);
-                        mStatDatas = new ArrayList<>();
-                        hasBeenSavedToday = false;
-                    } else {
-                        mStatData = mStatDatas.get(mDataListIndex >= mStatDatas.size() ? mStatDatas.size() - 1 : mDataListIndex);
-                        hasBeenSavedToday = Utils.isTimestampToday(mStatData.getTimeStamp());
-                        mStatData.setDataMap(Utils.parseStringToSparseArray(mStatData.getDataString()));
-                    }
-                    if (!hasBeenSavedToday) {
-                        mTimestamp = Utils.getCurrentTimestamp();
-                        mDataListIndex = mStatDatas.size();
-                    } else {
-                        mTimestamp = mStatData.getTimeStamp();
-                    }
-                    mStatData.setTimeStamp(mTimestamp);
-                    mStatDatas.add(mStatData);
-                    mTimeTextView.setText(Utils.formatDigitalTime(mTimestamp));
-
-                    SharedPreferences.Editor editor = mSharedPreferences.edit();
-                    editor.putInt(Constants.LAST_DATA_INDEX + mStudent.getStatDataKey(), mDataListIndex);
-                    editor.apply();
-
-                    mBlockFragment.updateBlocks(mStatData.getDataMap());
+        mStatDatabaseHelper = new StatDatabaseHelper(
+                FirebaseDatabase.getInstance(),
+                this, mStudentKey);
 
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            for (int i = 0; i < mStatDatas.size(); i++) {
-                                final StatData data = mStatDatas.get(i);
-                                data.setDataMap(Utils.parseStringToSparseArray(data.getDataString()));
-                            }
-                        }
-                    });
-                }
-
-            }
-
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        // FIXME: 2017-09-08 no key, use keymap instead
+        mStatDatabaseHelper.fetchData("keymap!!!");
 
 
         mFragmentManager = getSupportFragmentManager();
@@ -168,7 +114,7 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
         hasStartFragnent = true;
 
 
-        // TODO: 2017-08-01 filter comments when chosing a tag
+// TODO: 2017-08-01 filter comments when chosing a tag
         final Spinner spinner = (Spinner) findViewById(R.id.tag_spinner);
         mSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new ArrayList<String>());
         spinner.setAdapter(mSpinnerAdapter);
@@ -265,44 +211,8 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
         recyclerView.setLayoutManager(layoutManager);
 
 
-        final HashMap<String, Boolean> hashMap = mStudent.getCommentsKeyMap();
-        if (hashMap != null) {
-            for (String key : hashMap.keySet()) {
-                final DatabaseReference reference = mDatabase.getReference().child("comments").child(key);
-                reference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        final Comment comment = dataSnapshot.getValue(Comment.class);
-                        comment.setTimeAndDate();
-
-                        // add tag here if a new one
-
-                        List<String> tag;
-                        tag = comment.getTag();
-                        if (tag == null) {
-                            tag = new ArrayList<String>();
-                        }
-                        final int count = mSpinnerAdapter.getCount();
-                        // searching
-                        for (int i = 0; i < count; i++) {
-                            final String item = mSpinnerAdapter.getItem(i);
-                            if (tag.contains(item)) {
-                                mSpinnerAdapter.add(item);
-                                mSpinnerAdapter.notifyDataSetChanged();
-                            }
-                        }
-                        mAdapter.addComment(comment);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-
-
-            }
-        }
+        // FIXME: 2017-09-08 send correct hashmap
+        mStatDatabaseHelper.fetchComment(new HashMap<String, Boolean>());
 
         mCommentEdittext.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -310,16 +220,9 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
                 if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
 
                     final String text = mCommentEdittext.getText().toString();
-                    final DatabaseReference commentReference = mDatabase.getReference();
-                    final String key = commentReference.push().getKey();
-                    mStudent.addCommentKey(key);
-                    mDatabase.getReference().child("student").child(mStudentKey).child(mIndex + "").child("commentsKeyMap").setValue(mStudent.getCommentsKeyMap());
                     String userName = mSharedPreferences.getString(Constants.KEY_MEMBER_NAME, "");
-                    final Comment comment = new Comment(text, Utils.getCurrentTimestamp(), userName);
-                    comment.setTag(Utils.hashtagFinder(text));
-                    comment.setTimeAndDate();
-                    commentReference.child("comments").child(key).setValue(comment);
-
+                    final Comment comment = mStatDatabaseHelper.insertComment(text, userName);
+                    mStudent.addCommentKey(comment.getCommentKey());
                     mAdapter.addComment(comment);
                     return true;
                 } else {
@@ -330,6 +233,9 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
 
 
     }
+
+
+
 
     public static void start(Context context, int studentIndex, Student student, String groupKey, String studentKey) {
         Intent starter = new Intent(context, StatisticsActivity.class);
@@ -356,11 +262,78 @@ public class StatisticsActivity extends AppCompatActivity implements BlockGraphI
 
     @Override
     public void onStopSaveFragment(SparseIntArray dataMap) {
-        final DatabaseReference dataReference = mDatabase.getReference();
-        final String indexString;
-        indexString = mDataListIndex + "";
-        final StatData statData = new StatData(Utils.parseSparseArrayToString(dataMap), Utils.getCurrentTimestamp());
-        dataReference.child("statData").child(mStudent.getStatDataKey()).child(indexString).setValue(statData);
+        // TODO: 2017-09-08 save current dataKey as a member variable.
+        if (hasBeenSavedToday) {
+            // FIXME: 2017-09-08 get correct key.
+            mStatDatabaseHelper.updateData(dataMap, "a key");
+        } else {
+            mStatDatabaseHelper.insertData(dataMap);
+        }
     }
 
+
+
+    @Override
+    public void onDataFetched(List<StatData> statDatas) {
+        mStatDatas= statDatas;
+        // FIXME: 2017-08-01 return the same saved blocks as the day before
+        if (hasStartFragnent) {
+            mBlockFragment = (BlockGraphItemFragment) mFragmentManager.findFragmentByTag(BLOCK_TAG);
+            if (mStatDatas == null) {
+                mStatData = new StatData("", 0);
+                mStatDatas = new ArrayList<>();
+                hasBeenSavedToday = false;
+            } else {
+                // getting the first since it should be the latest
+                mStatData = mStatDatas.get(0);
+                hasBeenSavedToday = Utils.isTimestampToday(mStatData.getTimeStamp());
+                mStatData.setDataMap(Utils.parseStringToSparseArray(mStatData.getDataString()));
+            }
+            if (!hasBeenSavedToday) {
+                mTimestamp = Utils.getCurrentTimestamp();
+            } else {
+                mTimestamp = mStatData.getTimeStamp();
+            }
+            mStatData.setTimeStamp(mTimestamp);
+            mStatDatas.add(mStatData);
+            mTimeTextView.setText(Utils.formatDigitalTime(mTimestamp));
+            mBlockFragment.updateBlocks(mStatData.getDataMap());
+
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < mStatDatas.size(); i++) {
+                        final StatData data = mStatDatas.get(i);
+                        data.setDataMap(Utils.parseStringToSparseArray(data.getDataString()));
+                    }
+                }
+            });
+        }
+
+    }
+
+    @Override
+    public void onCommentFetched(Comment comment) {
+        comment.setTimeAndDate();
+
+        // add tag here if a new one
+
+        List<String> tag;
+        tag = comment.getTag();
+        if (tag == null) {
+            tag = new ArrayList<String>();
+        }
+        final int count = mSpinnerAdapter.getCount();
+        // searching
+        for (int i = 0; i < count; i++) {
+            final String item = mSpinnerAdapter.getItem(i);
+            if (tag.contains(item)) {
+                mSpinnerAdapter.add(item);
+                mSpinnerAdapter.notifyDataSetChanged();
+            }
+        }
+        mAdapter.addComment(comment);
+
+    }
 }

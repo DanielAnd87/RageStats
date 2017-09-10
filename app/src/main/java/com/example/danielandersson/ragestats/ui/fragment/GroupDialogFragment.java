@@ -6,17 +6,26 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.example.danielandersson.ragestats.AdapterCommunicator;
 import com.example.danielandersson.ragestats.Data.Group;
+import com.example.danielandersson.ragestats.Data.Member;
 import com.example.danielandersson.ragestats.R;
 import com.example.danielandersson.ragestats.ui.adapters.MyAddMemberItemRecyclerViewAdapter;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A fragment representing a list of Items.
@@ -24,7 +33,8 @@ import java.util.ArrayList;
  * Activities containing this fragment MUST implement the {@link OnComfirmed}
  * interface.
  */
-public class GroupDialogFragment extends Fragment {
+
+public class GroupDialogFragment extends Fragment implements AdapterCommunicator{
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
@@ -33,6 +43,10 @@ public class GroupDialogFragment extends Fragment {
     private Button mAddBtn;
     private boolean mIsUpdating;
     private Group mGroup;
+    private SearchView mSearchView;
+    private FirebaseDatabase mDatabase;
+    private HashMap<String, Boolean> mMemberMap = new HashMap<>();
+    private MyAddMemberItemRecyclerViewAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -71,6 +85,8 @@ public class GroupDialogFragment extends Fragment {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
             mGroup = getArguments().getParcelable(GROUP_);
             mIsUpdating = getArguments().getBoolean(IS_UPDATING);
+        } else {
+            mGroup = new Group();
         }
     }
 
@@ -81,8 +97,10 @@ public class GroupDialogFragment extends Fragment {
 
 
         mEditText = (EditText) view.findViewById(R.id.group_name_edittext);
+        mSearchView = (SearchView) view.findViewById(R.id.group_search_view);
         mAddBtn = (Button) view.findViewById(R.id.group_add_btn);
 
+        // TODO: 2017-09-09 hide the label and the "X" button on the adapter when searches is displayed.
 
         // Set the adapter
         Context context = view.getContext();
@@ -97,14 +115,69 @@ public class GroupDialogFragment extends Fragment {
         if (mIsUpdating) {
             mEditText.setText(mGroup.getGroupName());
             mAddBtn.setText(R.string.label_update_button);
-            recyclerView.setAdapter(new MyAddMemberItemRecyclerViewAdapter(
+            mAdapter = new MyAddMemberItemRecyclerViewAdapter(
                     (ArrayList) mGroup.getMembers(),
-                    mListener));
+                    mListener, (AdapterCommunicator)this);
+            recyclerView.setAdapter(mAdapter);
         } else {
-            recyclerView.setAdapter(new MyAddMemberItemRecyclerViewAdapter(memberString, mListener));
+            mAdapter = new MyAddMemberItemRecyclerViewAdapter(memberString, mListener, (AdapterCommunicator)this);
+            recyclerView.setAdapter(mAdapter);
         }
 
+        mDatabase = FirebaseDatabase.getInstance();
+        final Query memberQuery = mDatabase.getReference("members").orderByChild("memberName");
 
+
+mSearchView.setOnCloseListener(new SearchView.OnCloseListener() {
+    @Override
+    public boolean onClose() {
+        mAdapter.setSearchMode(false);
+        return false;
+    }
+});
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // TODO: 2017-09-09 do a firebase search righ here.
+                memberQuery.startAt(query);
+                memberQuery.addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                        final Member member = dataSnapshot.getValue(Member.class);
+                        final String key = dataSnapshot.getKey();
+                        addMemberToSearchList(member.getMemberName(), key);
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // TODO: 2017-09-09 chould probobly stop the last query for performance
+                // TODO: 2017-09-09 do a new query
+                return false;
+            }
+        });
         mAddBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -113,7 +186,6 @@ public class GroupDialogFragment extends Fragment {
                 if (mIsUpdating) {
                     mListener.onConfirmUpdateGroup(mGroup);
                 } else {
-
                     mListener.onConfirmInsertGroup(mGroup);
                 }
             }
@@ -127,6 +199,10 @@ public class GroupDialogFragment extends Fragment {
             }
         });
         return view;
+    }
+
+    public void addMemberToSearchList(String memberName, String key) {
+        mAdapter.addMember(memberName, key);
     }
 
     @Override
@@ -146,6 +222,19 @@ public class GroupDialogFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void addMemberToGroup(String memberName, String memberKey) {
+        if (mGroup == null) {
+            mGroup = new Group();
+        }
+        mGroup.addMember(memberKey, memberName);
+    }
+
+    @Override
+    public void getMembers() {
+        mAdapter.addMembers(mGroup.getMembers());
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -156,9 +245,12 @@ public class GroupDialogFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
+    // TODO: 2017-09-09 add a listener for the adapter to the fragments
+
     public interface OnComfirmed {
         void onConfirmInsertGroup(Group group);
-
         void onConfirmUpdateGroup(Group group);
     }
+
+
 }

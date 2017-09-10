@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import com.example.danielandersson.ragestats.Data.Constants;
 import com.example.danielandersson.ragestats.Data.Group;
-import com.example.danielandersson.ragestats.Data.Member;
 import com.example.danielandersson.ragestats.Data.Student;
 import com.example.danielandersson.ragestats.MainDatabaseHelper;
 import com.example.danielandersson.ragestats.R;
@@ -28,8 +27,6 @@ import com.example.danielandersson.ragestats.ui.fragment.MainItemFragment;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
@@ -46,18 +43,11 @@ public class MainActivity extends AppCompatActivity
 
     private static final String GROUP_FRAGMENT_TAG = GroupDialogFragment.class.getSimpleName();
     private static final String STUDENT_FRAGMENT_TAG = AddStudentFragment.class.getSimpleName();
-    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String COMMENT_FRAGMENT_TAG = CommentFragment.class.getSimpleName();
     private FragmentManager mFragmentManager;
     private FragmentTransaction mTransaction;
     private MyMainItemRecyclerViewAdapter mAdapter;
-    private DatabaseReference mDatabaseGroupReference;
-    private ChildEventListener mChildEventListener;
     private String mTemporaryStudentName;
-    private SharedPreferences mSharedPreferences;
-    private String mMyMemeberKey;
-    private Member mMyMemberValue;
-    private Member mMember;
     private CommentFragment mCommentFragment;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -70,8 +60,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         mFragmentManager = getSupportFragmentManager();
         mTransaction = mFragmentManager.beginTransaction();
-        mSharedPreferences = getPreferences(Context.MODE_PRIVATE);
-
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
@@ -103,7 +91,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         };
-
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -285,8 +272,6 @@ public class MainActivity extends AppCompatActivity
 
         if (groupPos < mAdapter.getGroups().size()) {
             mMainDatabaseHelper.saveStudent(name, groupPos);
-
-
         } else {
             mTemporaryStudentName = name;
             startAddGroupFragment(new Group(), false);
@@ -305,16 +290,13 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     @Override
     public void onAddCommentToDatabase(String text, int studentPosition) {
 
         mMainDatabaseHelper.insertComment(text, studentPosition);
 
-
         FragmentTransaction transaction = mFragmentManager.beginTransaction();
         Toast.makeText(this, "'" + text + "'" + getString(R.string.toast_text), Toast.LENGTH_SHORT).show();
-
 
         if (mCommentFragment != null) {
             transaction.remove(mCommentFragment);

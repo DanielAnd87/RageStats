@@ -72,9 +72,9 @@ public class GroupListIntentService extends RemoteViewsService {
                 // TODO: 2017-08-16 get the correct group from configure activity
                 Log.i(TAG, "onDataSetChanged: ");
                 if (getCount() == 0) {
-                Log.i(TAG, "onDataSetChanged: " +
-                        "zero items in list!");
-                    String groupKey = "-KqJTio7hIsv-1lboLAs";
+                    Log.i(TAG, "onDataSetChanged: " +
+                            "zero items in list!");
+                    String groupKey = "-KtLlAl7eJMLXHXIFoql";
                     fetchData(groupKey);
                 }
 
@@ -146,32 +146,34 @@ public class GroupListIntentService extends RemoteViewsService {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Group fetchedGroup = dataSnapshot.getValue(Group.class);
-                Log.i(TAG, "onDataChange: "
-                        + mGroup.getGroupName());
-                final String key = dataSnapshot.getKey();
-                mGroup = fetchedGroup;
-                mGroup.setGroupKey(key);
+                if (fetchedGroup != null) {
+                    Log.i(TAG, "onDataChange: "
+                            + mGroup.getGroupName());
+                    final String key = dataSnapshot.getKey();
+                    mGroup = fetchedGroup;
+                    mGroup.setGroupKey(key);
 
-                final DatabaseReference studentReference = mFirebaseDatabase.getReference(Constants.PATH_STUDENTS + "/" + mGroup.getStudentListKey() + "/");
+                    final DatabaseReference studentReference = mFirebaseDatabase.getReference(Constants.PATH_STUDENTS + "/" + mGroup.getStudentListKey() + "/");
 
-                studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
-                        });
-                        mGroup.setStudents((ArrayList<Student>) studentList);
-                        for (Student student : studentList) {
-                        Log.i(TAG, "onDataChange: "+ student.getName());
+                    studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
+                            });
+                            mGroup.setStudents((ArrayList<Student>) studentList);
+                            for (Student student : studentList) {
+                                Log.i(TAG, "onDataChange: " + student.getName());
+                            }
+
+                            GroupListWidget.sendUpdateBroadcast(mContext);
                         }
 
-                        GroupListWidget.sendUpdateBroadcast(mContext);
-                    }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+                        }
+                    });
+                }
 
             }
 

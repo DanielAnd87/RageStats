@@ -24,8 +24,8 @@ public class Student implements Parcelable {
         }
     };
     private String mName;
-    private String mStatDataKey;
     private HashMap<String, Boolean> mCommentsKeyMap;
+    private HashMap<String, Boolean> mDataKeyMap;
 
 
 
@@ -39,7 +39,6 @@ public class Student implements Parcelable {
 
     protected Student(Parcel in) {
         this.mName = in.readString();
-        this.mStatDataKey = in.readString();
         this.mCommentsKeyMap = (HashMap<String, Boolean>) in.readSerializable();
     }
 
@@ -51,13 +50,6 @@ public class Student implements Parcelable {
         mCommentsKeyMap = commentsKeyMap;
     }
 
-    public String getStatDataKey() {
-        return mStatDataKey;
-    }
-
-    public void setStatDataKey(String statDataKey) {
-        mStatDataKey = statDataKey;
-    }
 
     public String getName() {
         return mName;
@@ -75,8 +67,15 @@ public class Student implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.mName);
-        dest.writeString(this.mStatDataKey);
         dest.writeSerializable(this.mCommentsKeyMap);
+    }
+
+    public HashMap<String, Boolean> getDataKeyMap() {
+        return mDataKeyMap;
+    }
+
+    public void setDataKeyMap(HashMap<String, Boolean> dataKeyMap) {
+        mDataKeyMap = dataKeyMap;
     }
 
     public void addCommentKey(String key) {
