@@ -5,7 +5,7 @@
 
     <TextView
         android:id="@+id/student_name_main_list"
-
+        android:textSize="28sp"
         tools:text="Erik Bengtsson"
         style="@style/main_name_label_style"/>
 

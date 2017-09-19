@@ -11,6 +11,7 @@ import com.example.danielandersson.ragestats.R;
 import com.example.danielandersson.ragestats.ui.fragment.BlockGraphItemFragment.OnListFragmentInteractionListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * specified {@link OnListFragmentInteractionListener}.
@@ -19,13 +20,17 @@ public class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     public static final int HEADLINE = 1;
     public static final int LIST = 0;
+    private final String mNoTag;
     private ArrayList<Comment> mFilterdCommentList;
     private ArrayList<Comment> mUnfilterdCommentList;
+    private String mTag;
 
 
-    public CommentsAdapter(ArrayList<Comment> filterdCommentList) {
-        mFilterdCommentList = filterdCommentList;
-        mUnfilterdCommentList = filterdCommentList;
+    public CommentsAdapter(String defaultTag) {
+        mFilterdCommentList = new ArrayList<>();
+        mUnfilterdCommentList = new ArrayList<>();
+        mNoTag = defaultTag;
+        mTag = defaultTag;
     }
 
     @Override
@@ -76,20 +81,41 @@ public class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     public void addComment(Comment comment) {
+        List<String> commentTags = comment.getTags();
+        if (mTag.equals(mNoTag)) {
+            notifyingCommentAdded(comment);
+        } else if (commentTags != null) {
+            for (String commentTag : commentTags) {
+                if (mTag.equals(commentTag)) {
+                    notifyingCommentAdded(comment);
+                }
+            }
+        }
+        mUnfilterdCommentList.add(comment);
+    }
+
+    public void notifyingCommentAdded(Comment comment) {
         mFilterdCommentList.add(getItemCount() - 1, comment);
         notifyItemInserted(getItemCount());
     }
 
-    public void filterByTag(String tag) {
-        ArrayList<Comment> comments = new ArrayList<>();
+    public void setTag(String tag) {
+        mTag = tag;
+        filterByTag();
+    }
+
+    public void filterByTag() {
+        mFilterdCommentList.clear();
+
         for (Comment comment : mUnfilterdCommentList) {
-            if (comment.getTag().equals(tag)) {
-                comments.add(comment);
+            List<String> commentTags = comment.getTags();
+            for (String commentTag : commentTags) {
+                if (mTag.equals(mNoTag) || commentTag.equals(mTag)) {
+                    mFilterdCommentList.add(getItemCount() - 1, comment);
+                }
             }
         }
-        mFilterdCommentList = comments;
         notifyDataSetChanged();
-        // TODO: 2017-08-01 add a way to add tags as well
     }
 
     public class ViewHolderList extends RecyclerView.ViewHolder {
@@ -102,7 +128,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         public ViewHolderList(View view) {
             super(view);
             mView = view;
-
+// FIXME: 2017-09-16 set the time after the comments timestamp
             mComment = (TextView) view.findViewById(R.id.comment_textview);
             mDateTextView = (TextView) view.findViewById(R.id.date_textview);
             mTimeTextView = (TextView) view.findViewById(R.id.time_textview);

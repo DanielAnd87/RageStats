@@ -13,15 +13,24 @@ import java.util.Map;
  */
 
 public class Group implements Parcelable {
+    private ArrayList<Student> mStudents;
     private String mGroupName;
     private ArrayList<String> mMembers;
     private String mGroupKey;
-    private ArrayList<Student> mStudents = new ArrayList<>();
+
 // TODO: 2017-09-04 add students as a set instead. Need to whipe all students from db.
 //    private HashMap<String, Boolean> mStudentKeys;
     private Map<String, Boolean> mMembersMap = new HashMap<>();
-    private String mStudentListKey;
+    private Map<String, Boolean> mStudentMap = new HashMap<>();
     private Group mGroup;
+
+    public Map<String, Boolean> getStudentMap() {
+        return mStudentMap;
+    }
+
+    public void setStudentMap(Map<String, Boolean> studentMap) {
+        mStudentMap = studentMap;
+    }
 
     public Group() {
     }
@@ -35,14 +44,6 @@ public class Group implements Parcelable {
     public Group(String name, ArrayList<String> memebers) {
         mMembers = memebers;
         mGroupName = name;
-    }
-
-    public String getStudentListKey() {
-        return mStudentListKey;
-    }
-
-    public void setStudentListKey(String studentListKey) {
-        mStudentListKey = studentListKey;
     }
 
 
@@ -81,6 +82,9 @@ public class Group implements Parcelable {
     }
     @Exclude
     public ArrayList<Student> getStudents() {
+        if (mStudents == null) {
+            mStudents = new ArrayList();
+        }
         return mStudents;
     }
     @Exclude
@@ -111,7 +115,6 @@ public class Group implements Parcelable {
             dest.writeString(entry.getKey());
             dest.writeValue(entry.getValue());
         }
-        dest.writeString(this.mStudentListKey);
     }
 
     protected Group(Parcel in) {
@@ -127,7 +130,6 @@ public class Group implements Parcelable {
             Boolean value = (Boolean) in.readValue(Boolean.class.getClassLoader());
             this.mMembersMap.put(key, value);
         }
-        this.mStudentListKey = in.readString();
     }
 
     public static final Parcelable.Creator<Group> CREATOR = new Parcelable.Creator<Group>() {

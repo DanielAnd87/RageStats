@@ -1,142 +1,54 @@
 package com.example.danielandersson.ragestats;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.util.SparseIntArray;
 
 import com.example.danielandersson.ragestats.Data.Comment;
 import com.example.danielandersson.ragestats.Data.Constants;
 import com.example.danielandersson.ragestats.Data.Group;
 import com.example.danielandersson.ragestats.Data.Member;
+import com.example.danielandersson.ragestats.Data.StatData;
 import com.example.danielandersson.ragestats.Data.Student;
-import com.example.danielandersson.ragestats.ui.adapters.MyMainItemRecyclerViewAdapter;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.Query;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /**
+ *
  * Created by danielandersson on 2017-08-14.
  */
 
 public class MainDatabaseHelper {
 
     private final FirebaseDatabase mDatabase;
+    private final OnAdapterCallBack mListener;
     private String mMyMemeberKey;
     private final Context mContext;
     private Member mMember;
-    private MyMainItemRecyclerViewAdapter mAdapter;
     private SharedPreferences mSharedPreferences;
     public static final String TAG = MainDatabaseHelper.class.getSimpleName();
 
 
-    public MainDatabaseHelper(FirebaseDatabase firebaseDatabase, Activity activity) {
+    public MainDatabaseHelper(Context context, OnAdapterCallBack listener, SharedPreferences preferences) {
         mDatabase = FirebaseDatabase.getInstance();
+        mListener = listener;
 
-        mSharedPreferences = activity.getPreferences(Context.MODE_PRIVATE);
+        mSharedPreferences = preferences;
 
-        mContext = activity;
+        mContext = context;
         // the reference for the users own member profile.
     }
 
-    public void setAdapter(MyMainItemRecyclerViewAdapter adapter) {
-        mAdapter = adapter;
-    }
-
-//    public void onSignedInInitialize(String userDisplayName, String userUid) {
-//
-//        mMyMemeberKey = mSharedPreferences.getString(Constants.KEY_MEMBER, "");
-//        if (!mMyMemeberKey.equals(userUid)) {
-//            final DatabaseReference membersReferens = mDatabase.getReference();
-//            // TODO: 2017-08-02 Because the displayName is null it wont save
-//            if (userDisplayName == null) {
-//                userDisplayName = mContext.getString(R.string.label_user);
-//            }
-//            membersReferens.child("/members/" + userUid + "/memberName/").setValue(userDisplayName);
-//
-//            SharedPreferences.Editor editor = mSharedPreferences.edit();
-//            editor.putString(Constants.KEY_MEMBER, userUid);
-//            editor.putString(Constants.KEY_MEMBER_NAME, userDisplayName);
-//            editor.apply();
-//        }
-//
-//        // testing comment for git
-//
-//        // the reference for the users own member profile.
-//        final DatabaseReference reference = mDatabase.getReference("/members/" + mMyMemeberKey);
-//
-//
-////        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-////            @Override
-////            public void onDataChange(DataSnapshot dataSnapshot) {
-////                mMember = dataSnapshot.getValue(Member.class);
-////                try {
-////                    // add the member object right here
-////                    final HashMap<String, Boolean> hashMap = mMember.getGroupKeys();
-////                    for (String key : hashMap.keySet()) {
-////                        final DatabaseReference reference1 = mDatabase.getReference(Constants.PATH_GROUP + "/" + key + "/");
-////                        reference1.addListenerForSingleValueEvent(new ValueEventListener() {
-////                            @Override
-////                            public void onDataChange(DataSnapshot dataSnapshot) {
-////                                final Group group = dataSnapshot.getValue(Group.class);
-////                                final String key = dataSnapshot.getKey();
-////                                group.setGroupKey(key);
-////
-////                                mAdapter.addGroup(group);
-////
-////
-////                                final DatabaseReference studentReference = mDatabase.getReference(Constants.PATH_STUDENTS + group.getStudentListKey() + "/");
-////
-////                                studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
-////                                    @Override
-////                                    public void onDataChange(DataSnapshot dataSnapshot) {
-////                                        final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
-////                                        });
-////                                        if (studentList != null) {
-////                                            mAdapter.addStudents(studentList, group.getGroupKey());
-////                                        }
-////                                    }
-////
-////                                    @Override
-////                                    public void onCancelled(DatabaseError databaseError) {
-////
-////                                    }
-////                                });
-////
-////                            }
-////
-////                            @Override
-////                            public void onCancelled(DatabaseError databaseError) {
-////
-////                            }
-////                        });
-////
-////                        // ...
-////                    }
-////                } catch (NullPointerException e) {
-////                    e.printStackTrace();
-////                }
-////
-////            }
-////
-////            @Override
-////            public void onCancelled(DatabaseError databaseError) {
-////
-////            }
-////        });
-//
-//
-//    }
 
     public void onSignedInInitialize(String userDisplayName, String userUid) {
 
@@ -155,9 +67,10 @@ public class MainDatabaseHelper {
             editor.apply();
         }
 
-        // testing comment for git
+        fetchMembers();
+    }
 
-        // the reference for the users own member profile.
+    public void fetchMembers() {
         final DatabaseReference reference = mDatabase.getReference("/members/" + mMyMemeberKey);
 
 
@@ -166,66 +79,7 @@ public class MainDatabaseHelper {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mMember = dataSnapshot.getValue(Member.class);
                 try {
-                    // add the member object right here
-                    final DatabaseReference reference1 = mDatabase.getReference();
-                    final Query query = reference1.child("group").orderByKey();
-                    final HashMap<String, Boolean> hashMap = mMember.getGroupKeys();
-                    for (String key : hashMap.keySet()) {
-                        query.equalTo(key);
-                    }
-
-                    query.addChildEventListener(new ChildEventListener() {
-                        @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            final Group group = dataSnapshot.getValue(Group.class);
-                            final String key = dataSnapshot.getKey();
-                            group.setGroupKey(key);
-
-                            final boolean groupWasAdded = mAdapter.addGroup(group);
-                            if (groupWasAdded) {
-                                Log.i(TAG, "onChildAdded: query success for: " + group.getGroupName());
-
-                                final DatabaseReference studentReference = mDatabase.getReference(Constants.PATH_STUDENTS + group.getStudentListKey() + "/");
-
-                                studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
-                                        });
-                                        if (studentList != null) {
-                                            mAdapter.addStudents(studentList, group.getGroupKey());
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-
-                                    }
-                                });
-                            }
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-
+                    fetchGroups(mMember.getGroupKeys());
 
                 } catch (NullPointerException e) {
                     e.printStackTrace();
@@ -238,34 +92,108 @@ public class MainDatabaseHelper {
 
             }
         });
+    }
 
+    public void fetchGroups(HashMap<String, Boolean> hashMap) {
+        for (String key : hashMap.keySet()) {
+            fetchGroup(key);
+        }
+    }
 
+    public void fetchGroup(String groupKey) {
+        mDatabase.getReference().child("group").child(groupKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                final Group group = dataSnapshot.getValue(Group.class);
+                final String key = dataSnapshot.getKey();
+                group.setGroupKey(key);
+
+                boolean groupWasAdded = mListener.addGroup(group);
+                if (groupWasAdded) {
+                    Log.i(TAG, "onChildAdded: query success for: " + group.getGroupName());
+
+                    fetchStudents(group, group.getStudentMap());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    public void fetchStudents(final Group group, Map<String, Boolean> studentMap) {
+        if (studentMap != null || studentMap.size() > 0) {
+            for (String keyString : studentMap.keySet()) {
+                mDatabase.
+                        getReference().
+                        child("student").
+                        child(keyString).
+                        addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Student student = dataSnapshot.getValue(Student.class);
+                                student.setStudentKey(dataSnapshot.getKey());
+                                mListener.addStudent(student, group.getGroupKey());
+
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+            }
+
+        }
     }
 
     public void insertComment(String text, int studentPosition) {
         final DatabaseReference commentReference = mDatabase.getReference();
         final String key = commentReference.push().getKey();
-        final Student student = mAdapter.getStudent(studentPosition);
+        final Student student = mListener.getStudent(studentPosition);
         student.addCommentKey(key);
 
-        mDatabase.getReference().child("student").child(mAdapter.getStudentKey(studentPosition)).child(mAdapter.getStudentPos(studentPosition) + "").child("commentsKeyMap").setValue(student.getCommentsKeyMap());
+        mDatabase.getReference()
+                .child("student")
+                .child(student.getStudentKey())
+                .child("commentsKeyMap").setValue(student.getCommentsKeyMap());
         String userName = mSharedPreferences.getString(Constants.KEY_MEMBER_NAME, "");
         final Comment comment = new Comment(text, Utils.getCurrentTimestamp(), userName);
         comment.setTimeAndDate();
         commentReference.child("comments").child(key).setValue(comment);
     }
 
-    public void saveStudent(String name, int groupPos) {
+    public String insertStudent(Student student, String groupKey) {
         // getting reference for db
         final DatabaseReference reference = mDatabase.getReference();
         final String studentKey = reference.push().getKey();
-        // setting keys for comments and statData
-        final Student student = new Student(name);
-        // FIXME: 2017-09-06 the statdata needs its a keyset instead of a list
-        // adding to list adapter
-        final Group group = mAdapter.addStudent(name, groupPos);
-        // adding the student object to db list
-        reference.child(Constants.PATH_STUDENTS).child(group.getStudentListKey()).child((group.getStudents().size() - 1) + "").setValue(student);
+        reference
+                .child("group")
+                .child(groupKey)
+                .child("studentMap")
+                .child(studentKey)
+                .setValue(true);
+
+        mDatabase.getReference()
+                .child("student")
+                .child(studentKey)
+                .setValue(student);
+        return studentKey;
+    }
+
+    public void updateStudent(SparseIntArray dataMap, Student student) {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        dataReference.child("student").child(student.getStudentKey()).setValue(student);
+    }
+
+    public void removeData(String studentKey, String groupKey) {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        dataReference.child("group").child(groupKey).child("studentMap").child(studentKey).removeValue();
+
+        dataReference.child("student").child(studentKey).removeValue();
     }
 
     public void updateGroup(String key, String name, List<String> members) {
@@ -286,46 +214,114 @@ public class MainDatabaseHelper {
         }
     }
 
-    public void saveSmiley(int smileyIndex, Group group) {
+    public void saveSmiley(Student student, int smileyValue) {
+        int hour = Utils.getThisHour(Utils.getCurrentTimestamp());
+        HashMap<String, Long> dataKeyMap = student.getDataKeyMap();
+        boolean isFound = false;
+        if (dataKeyMap.size()>0) {
+            Iterator<String> iterator = dataKeyMap.keySet().iterator();
+            isFound = false;
+            while (iterator.hasNext() && !isFound) {
+                final String firstKey = iterator.next();
+                if (Utils.isTimestampToday(dataKeyMap.get(firstKey) / 1000)) {
+                    updateSmileyData(firstKey, hour, smileyValue);
+                    isFound = true;
+                }
+            }
+        }
 
-        // TODO: 2017-08-23 get the data from the map
-        // TODO: 2017-08-23 if no data then create a clean data.
-        // TODO: 2017-08-23 check if contains current hour.
-        // TODO: 2017-08-23 update the current hour if exist.
-        // TODO: 2017-08-23 save the last hour that was saved, if nothing was saved then no need to fetch it.
-        // TODO: 2017-08-23 use the method in Util to check if it has been saved today.
-//        reference.child(Constants.PATH_STUDENTS).child(group.getStudentListKey()).child((group.getStudents().size() - 1) + "").setValue(student);
+        if (!isFound) {
+            final SparseIntArray sparseIntArray = new SparseIntArray();
+            sparseIntArray.put(hour, smileyValue);
+            insertData(sparseIntArray, student.getStudentKey());
+        }
+    }
 
+
+    public String insertData(SparseIntArray dataMap, String studentKey) {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        final String dataKey = dataReference.push().getKey();
+        final StatData statData = new StatData(Utils.parseSparseArrayToString(dataMap), Utils.getCurrentTimestamp());
+
+
+        dataReference
+                .child("student")
+                .child(studentKey)
+                .child("dataKeyMap")
+                .child(dataKey)
+                .setValue(ServerValue.TIMESTAMP);
+        mDatabase.getReference()
+                .child("statData")
+                .child(dataKey)
+                .setValue(statData);
+
+        updateLastInsert(studentKey, dataKey);
+        return dataKey;
+    }
+
+    private void updateLastInsert(String studentKey, String dataKey) {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        long currentTimestamp = Utils.getCurrentTimestamp();
+        dataReference.child("student").child(studentKey).child("lastDataSave").setValue(currentTimestamp);
+        // updating the student in the list as well.
+        mListener.updateStudent(studentKey, dataKey);
     }
 
 
     public void insertGroup(Group group, Student student) {
         group.addStudent(student);
 
-        // Adding a student list to the database and saving the key
-        final DatabaseReference reference = mDatabase.getReference();
-        final String studentKey = reference.push().getKey();
-
-        final ArrayList<Student> students = new ArrayList<Student>();
-        // setting new key references for comments and data
-        students.add(student);
-        reference.child("student").child(studentKey).setValue(students);
-
-        // FIXME: 2017-07-30 the student isnt saved
-
-        group.setStudentListKey(studentKey);
-        // TODO: 2017-07-30 send intire group when starting AddGroupFragment
 
         // saving to Firebase Realtime Database.
         final DatabaseReference groupReference = mDatabase.getReference();
         group.setGroupKey(groupReference.push().getKey());
         groupReference.child("group").child(group.getGroupKey()).setValue(group);
         // updating its members key maps in database
+        insertStudent(student, group.getGroupKey());
         updateMembersGroupMap(group.getGroupKey(), group.getMembersMap(), groupReference);
-        mAdapter.addGroup(group);
-        // TODO: 2017-07-30 add student
+        mListener.addGroup(group);
     }
 
+
+    public void updateData(SparseIntArray dataMap, String dataKey) {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        final StatData statData = new StatData(Utils.parseSparseArrayToString(dataMap), Utils.getCurrentTimestamp());
+        dataReference.child("statData").child(dataKey).setValue(statData);
+    }
+
+    private void updateSmileyData(final String dataKey, final int hour, final int value) {
+
+        // TODO: 2017-09-10 fetch the student and its keymap
+        final DatabaseReference reference = mDatabase.getReference().child("statData").child(dataKey).child("dataString");
+
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String statDatas = dataSnapshot.getValue(String.class);
+
+                final SparseIntArray sparseIntArray = Utils.parseStringToSparseArray(statDatas);
+                // TODO: 2017-09-11 add value
+                sparseIntArray.put(hour, value);
+
+                updateData(sparseIntArray, dataKey);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    public interface OnAdapterCallBack {
+        boolean addGroup(Group group);
+
+        void addStudent(Student student, String groupKey);
+
+        Student getStudent(int studentPosition);
+
+        void updateStudent(String studentKey, String dataKey);
+    }
 }
 
 

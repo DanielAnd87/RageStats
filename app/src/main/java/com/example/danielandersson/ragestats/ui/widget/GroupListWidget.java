@@ -41,7 +41,7 @@ public class GroupListWidget extends AppWidgetProvider {
         Log.i(TAG, "updateAppWidget: " + appWidgetId);
 
 
-//        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_list);
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_list);
 //
 //        final Intent service = startService(context, appWidgetId);
 //        context.startService(service);

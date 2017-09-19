@@ -5,16 +5,19 @@ import android.util.SparseIntArray;
 import com.example.danielandersson.ragestats.Utils;
 import com.google.firebase.database.Exclude;
 
+import java.util.Calendar;
+
 /**
+ *
  * Created by danielandersson on 2017-07-12.
  */
 
 public class StatData {
-    private String mStudentKey;
     private long mTimeStamp;
     private String mDataString;
     private SparseIntArray mDataMap;
-
+    private Calendar mCalendar;
+    private String mDataKey;
     public StatData() {
     }
 
@@ -26,6 +29,34 @@ public class StatData {
         mDataString = dataMap;
         mDataMap = Utils.parseStringToSparseArray(dataMap);
         mTimeStamp = timestamp;
+    }
+
+    @Exclude
+    public Calendar getCalendar() {
+        if (mCalendar == null) {
+            mCalendar = Calendar.getInstance();
+            mCalendar.setTimeInMillis(mTimeStamp);
+        }
+        return mCalendar;
+    }
+
+    @Exclude
+    public void setCalendar(Calendar calendar) {
+        mCalendar = calendar;
+    }
+
+    @Exclude
+    public String getDataKey() {
+        if (mDataKey == null) {
+            mDataKey = new String();
+        }
+        return mDataKey;
+    }
+
+    @Exclude
+    public void setDataKey(String dataKey) {
+        mDataKey = dataKey;
+        mDataMap = Utils.parseStringToSparseArray(dataKey);
     }
 
     public String getDataString() {
@@ -44,14 +75,6 @@ public class StatData {
     @Exclude
     public void setDataMap(SparseIntArray dataMap) {
         mDataMap = dataMap;
-    }
-
-    public String getStudentKey() {
-        return mStudentKey;
-    }
-
-    public void setStudentKey(String studentKey) {
-        mStudentKey = studentKey;
     }
 
     public long getTimeStamp() {

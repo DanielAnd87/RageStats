@@ -96,12 +96,15 @@ public class MyBlockGraphItemRecyclerViewAdapter extends RecyclerView.Adapter<My
 
     public void updateList(SparseIntArray dataMap) {
         if (dataMap != null) {
+            Log.i(TAG, "updateList: Block list is updating.");
 
             for (int i = 0; i < dataMap.size(); i++) {
                 mData[dataMap.keyAt(i)] = dataMap.valueAt(i);
             }
             mDataMap = dataMap;
             notifyDataSetChanged();
+        } else {
+            Log.w(TAG, "updateList: WARNING, THE DATA IS NULL");
         }
     }
 

@@ -134,7 +134,7 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                             @Override
                             public void onClick(View v) {
                                 if (null != mListener) {
-                                    mListener.onItemClick(student, group.getGroupKey(), group.getStudentListKey(), studentIndex);
+                                    mListener.onItemClick(student, group.getGroupKey(), student.getStudentKey());
                                 }
                             }
 
@@ -161,7 +161,7 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                                     mSmileyIndex = 0;
                                 }
                                 holderStudents.mSmileyBtn.setBackground(mContext.getDrawable(mSmileySrc[mSmileyIndex]));
-                                mListener.saveSmiley(mSmileyIndex, group);
+                                mListener.saveSmiley(student, mSmileyIndex * 10);
                             }
                         });
                     }
@@ -232,9 +232,8 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
         notifyDataSetChanged();
     }
 
-    public Group addStudent(String name, int groupPos) {
+    public Group addStudent(Student student, int groupPos) {
         final Group group = mGroups.get(groupPos);
-        final Student student = new Student(name);
         group.addStudent(student);
 
         indexGroups();
@@ -249,13 +248,25 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
 
     public void addStudent(Student student, String key) {
         for (Group group : mGroups) {
-            if (group.getGroupKey().equals(key)) {
+            boolean containsStudent = containsStudent(group.getStudents(), student.getStudentKey());
+            if (group.getGroupKey().equals(key) && !containsStudent) {
+//            if (group.getGroupKey().equals(key)) {
                 group.addStudent(student);
             }
         }
         indexGroups();
         notifyDataSetChanged();
         // FIXME: 2017-07-27 try to do this as rarely as possible
+    }
+
+    private boolean containsStudent(ArrayList<Student> students, String studentKey) {
+
+        for (Student student : students) {
+            if (student.getStudentKey().equals(studentKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addStudents(List<Student> studentList, String groupKey) {
@@ -280,8 +291,41 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
         return mIndexes[studentPosition][STUDENT];
     }
 
-    public String getStudentKey(int position) {
-        return mGroups.get(mIndexes[position][GROUP]).getStudentListKey();
+    public String getGroupKey(int groupPos) {
+        return mGroups.get(groupPos).getGroupKey();
+    }
+
+    public void updateStudent(String studentKey, String dataKey) {
+        for (Group group : mGroups) {
+            ArrayList<Student> students = group.getStudents();
+
+
+            for (int i = 0; i < students.size(); i++) {
+                Student student = students.get(i);
+                if (student.getStudentKey().equals(studentKey)) {
+                    if (student.getDataKeyMap()!=null) {
+                        student.getDataKeyMap().put(dataKey, System.currentTimeMillis());
+                    }
+                    student.setLastDataSave(System.currentTimeMillis()/1000);
+                    return;
+                }
+
+            }
+
+            for (Student student : students) {
+                if (student.getStudentKey().equals(studentKey)) {
+
+                    return;
+                }
+            }
+
+
+
+            if (containsStudent(students, studentKey)) {
+                // replacing the student with the latest update.
+
+            }
+        }
     }
 
     public class ViewHolderGroups extends RecyclerView.ViewHolder {

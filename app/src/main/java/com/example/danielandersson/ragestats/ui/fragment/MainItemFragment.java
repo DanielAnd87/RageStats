@@ -60,20 +60,19 @@ public class MainItemFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main_item_list, container, false);
 
         // Set the adapter
-        if (view instanceof RecyclerView) {
-            Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
-            if (mColumnCount <= 1) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            } else {
-                recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-            }
-            final ArrayList<Group> emptyList = new ArrayList<>();
-
-            final MyMainItemRecyclerViewAdapter adapter = new MyMainItemRecyclerViewAdapter(emptyList, mListener, getActivity());
-            recyclerView.setAdapter(adapter);
-            mListener.pairAdapters(adapter);
+        Context context = view.getContext();
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.main_list);
+//            RecyclerView recyclerView = (RecyclerView) view;
+        if (mColumnCount <= 1) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        } else {
+            recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
         }
+        final ArrayList<Group> emptyList = new ArrayList<>();
+
+        final MyMainItemRecyclerViewAdapter adapter = new MyMainItemRecyclerViewAdapter(emptyList, mListener, getActivity());
+        recyclerView.setAdapter(adapter);
+        mListener.pairAdapters(adapter);
         return view;
     }
 
@@ -106,7 +105,7 @@ public class MainItemFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        void onItemClick(Student item, String groupKey, String studentKey, int index);
+        void onItemClick(Student item, String groupKey, String studentKey);
 
         void onEditBtnClick(Group student);
 
@@ -114,7 +113,7 @@ public class MainItemFragment extends Fragment {
 
         void startCommentDialog(int studentIndex);
 
-        void saveSmiley(int smileyIndex, Group group);
+        void saveSmiley(Student student, int smileyValue);
     }
 
 }

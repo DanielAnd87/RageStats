@@ -30,6 +30,7 @@ public class BlockGraphItemFragment extends Fragment {
     private OnListFragmentInteractionListener mListener;
     private TextView mWeekdayTextView;
     private MyBlockGraphItemRecyclerViewAdapter mAdapter;
+    private String mDataKey;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -101,11 +102,21 @@ public class BlockGraphItemFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
-        mListener.onStopSaveFragment(mAdapter.getDataMap());
+        mListener.onStopSaveFragment(mAdapter.getDataMap(), mDataKey);
     }
 
-    public void updateBlocks(SparseIntArray dataMap) {
-        mAdapter.updateList(dataMap);
+    public void updateBlocks(StatData statData) {
+            mAdapter.updateList(statData.getDataMap());
+            mDataKey = statData.getDataKey();
+
+    }
+
+    public void setDataKey(String dataKey) {
+        mDataKey = dataKey;
+    }
+
+    public void setDateLabel(String dateLabel) {
+        mWeekdayTextView.setText(dateLabel);
     }
 
     /**
@@ -119,7 +130,7 @@ public class BlockGraphItemFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        void onStopSaveFragment(SparseIntArray dataMap);
+        void onStopSaveFragment(SparseIntArray dataMap, String dataKey);
 
     }
 }

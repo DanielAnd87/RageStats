@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.crystal.crystalrangeseekbar.interfaces.OnRangeSeekbarChangeListener;
+import com.crystal.crystalrangeseekbar.interfaces.OnRangeSeekbarFinalValueListener;
 import com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar;
 import com.example.danielandersson.ragestats.Data.StatData;
 import com.example.danielandersson.ragestats.R;
@@ -21,6 +22,7 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 
@@ -42,6 +44,8 @@ public class LongStatisticsFragment extends Fragment {
     private TextView mMonthTextView;
     private TextView mWeekdayTextView;
     private List<StatData> mStatData;
+    private long mMinValue;
+    private long mMaxValue;
 
     public LongStatisticsFragment() {
         // Required empty public constructor
@@ -80,9 +84,10 @@ public class LongStatisticsFragment extends Fragment {
         final View view = inflater.inflate(R.layout.fragment_long_statistics, container, false);
 
         mMonthTextView = (TextView) view.findViewById(R.id.month_view_long_graph);
+        setDateLabel(Utils.formatMonth(Calendar.getInstance().getTimeInMillis() / 1000));
 
-        mMonthTextView.setText(Utils.formatMonth(1499858458));
-
+        mMinValue = 0;
+        mMaxValue = 24;
 
         mBarChart = (BarChart) view.findViewById(R.id.bar_chart);
 
@@ -118,6 +123,8 @@ public class LongStatisticsFragment extends Fragment {
             public void valueChanged(Number minValue, Number maxValue) {
                 formatTime((long) minValue, tvMin);
                 formatTime((long) maxValue, tvMax);
+                mMinValue = (Long) minValue;
+                mMaxValue = (Long) maxValue;
                 tvMax.setText(String.valueOf(maxValue));
 
             }
@@ -128,6 +135,13 @@ public class LongStatisticsFragment extends Fragment {
                 } else {
                     textView.setText(String.valueOf(minValue));
                 }
+            }
+        });
+
+        crystalRangeSeekbar.setOnRangeSeekbarFinalValueListener(new OnRangeSeekbarFinalValueListener() {
+            @Override
+            public void finalValue(Number minValue, Number maxValue) {
+                updateChart();
             }
         });
 
@@ -166,16 +180,24 @@ public class LongStatisticsFragment extends Fragment {
 
 
         for (int day = 0; day < mStatData.size(); day++) {
-            final SparseIntArray intArray = mStatData.get(day).getDataMap();
+            StatData statData = mStatData.get(day);
+            final SparseIntArray intArray = statData.getDataMap();
             int medianInt = 0;
             int numValues = 0;
             for (int i = 0; i < intArray.size(); i++) {
-                medianInt += intArray.valueAt(i);
-                numValues++;
+                if (i >= mMinValue && i <= mMaxValue) {
+                    medianInt += intArray.valueAt(i);
+                    numValues++;
+                }
             }
 
             // FIXME: 2017-08-02 doesn't add anything at all if there is nothing saved
-            entries.add(new BarEntry(day, medianInt/numValues));
+            if (0 < numValues) {
+
+                int day_in_month = statData.getCalendar().get(Calendar.DAY_OF_MONTH);
+
+                entries.add(new BarEntry(day_in_month, medianInt / numValues));
+            }
         }
         final BarDataSet barSet = new BarDataSet(entries, getString(R.string.label_statistics_anger));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -187,6 +209,41 @@ public class LongStatisticsFragment extends Fragment {
         final BarData barData = new BarData(barSet);
         mBarChart.setData(barData);
         mBarChart.invalidate(); // refresh
+    }
+
+    private void updateChartLegasy() {
+        List<BarEntry> entries = new ArrayList<BarEntry>();
+
+
+        for (int day = 0; day < mStatData.size(); day++) {
+            final SparseIntArray intArray = mStatData.get(day).getDataMap();
+            int medianInt = 0;
+            int numValues = 0;
+            for (int i = 0; i < intArray.size(); i++) {
+                medianInt += intArray.valueAt(i);
+                numValues++;
+            }
+
+            // FIXME: 2017-08-02 doesn't add anything at all if there is nothing saved
+            if (0 < numValues) {
+
+                entries.add(new BarEntry(day, medianInt / numValues));
+            }
+        }
+        final BarDataSet barSet = new BarDataSet(entries, getString(R.string.label_statistics_anger));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            barSet.setColor(getActivity().getColor(R.color.colorAccent));
+            barSet.setValueTextColor(getActivity().getColor(R.color.color_white));
+        }
+
+
+        final BarData barData = new BarData(barSet);
+        mBarChart.setData(barData);
+        mBarChart.invalidate(); // refresh
+    }
+
+    public void setDateLabel(String dateLabel) {
+        mMonthTextView.setText(dateLabel);
     }
 
     /**

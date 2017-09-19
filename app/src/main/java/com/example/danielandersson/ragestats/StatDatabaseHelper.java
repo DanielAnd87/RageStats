@@ -1,6 +1,7 @@
 package com.example.danielandersson.ragestats;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.SparseIntArray;
 
 import com.example.danielandersson.ragestats.Data.Comment;
@@ -9,9 +10,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,26 +24,45 @@ import java.util.List;
 
 public class StatDatabaseHelper {
 
-    private OnDatabaseResultListerner mListerner;
+    private static final String TAG = StatDatabaseHelper.class.getSimpleName();
+    private OnDatabaseResultListener mListerner;
     private FirebaseDatabase mDatabase;
-    private int mIndex;
     private String mStudentKey;
 
 
-    public StatDatabaseHelper(FirebaseDatabase firebaseDatabase, OnDatabaseResultListerner listerner, String studentKey) {
+    public StatDatabaseHelper(FirebaseDatabase firebaseDatabase, OnDatabaseResultListener listerner, String studentKey) {
         mDatabase = firebaseDatabase;
         mListerner = listerner;
         mStudentKey = studentKey;
     }
 // TODO: 2017-09-06 use interface to send results to activity.
 
-    public void insertData(SparseIntArray dataMap) {
+    public String insertData(SparseIntArray dataMap) {
         final DatabaseReference dataReference = mDatabase.getReference();
         final String dataKey = dataReference.push().getKey();
         final StatData statData = new StatData(Utils.parseSparseArrayToString(dataMap), Utils.getCurrentTimestamp());
-        dataReference.child("student").child(mStudentKey).child("dataKeyMap").child(dataKey).setValue(true);
-        dataReference.child("statData").child(dataKey).setValue(statData);
+
+
+        dataReference
+                .child("student")
+                .child(mStudentKey)
+                .child("dataKeyMap")
+                .child(dataKey)
+                .setValue(ServerValue.TIMESTAMP);
+        mDatabase.getReference()
+                .child("statData")
+                .child(dataKey)
+                .setValue(statData);
+
+        updateLastInsert();
+        return dataKey;
     }
+
+    private void updateLastInsert() {
+        final DatabaseReference dataReference = mDatabase.getReference();
+        dataReference.child("student").child(mStudentKey).child("lastDataSave").setValue(Utils.getCurrentTimestamp());
+    }
+
 
     public void updateData(SparseIntArray dataMap, String dataKey) {
         final DatabaseReference dataReference = mDatabase.getReference();
@@ -49,40 +70,65 @@ public class StatDatabaseHelper {
         dataReference.child("statData").child(dataKey).setValue(statData);
     }
 
-    public void removeData(SparseIntArray dataMap, String dataKey) {
+    public void removeData(String dataKey) {
         final DatabaseReference dataReference = mDatabase.getReference();
-        dataReference.child("student").child(mStudentKey).child("dataKeyMap").child(dataKey).removeValue();
+        dataReference
+                .child("student")
+                .child(mStudentKey)
+                .child("dataKeyMap")
+                .child(dataKey)
+                .removeValue();
         dataReference.child("statData").child(dataKey).removeValue();
     }
 
-    public void fetchData(String statDataKey) {
+    public void fetchData(HashMap<String, Long> hashMap, Calendar instance, final boolean dayInterval) {
 
-        final DatabaseReference dataReference = mDatabase.getReference();
-        // FIXME: 2017-09-06 loop trough a keymap instead of a list.
-        dataReference
-                .child("statData")
-                .child(statDataKey)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // adding data member list
-                List<StatData> statDatas = dataSnapshot.getValue(new GenericTypeIndicator<List<StatData>>() {
-                });
+        if (hashMap != null) {
+            for (String dataKey : hashMap.keySet()) {
 
-                mListerner.onDataFetched(statDatas);
+                Long value = hashMap.get(dataKey) / 1000;
+
+                boolean isInRange = dayInterval ?
+                                Utils.getDayStartTimestamp(instance) < value ||
+                                Utils.getDayEndTimestamp(instance) > value
+                                :
+                                Utils.getMonthStartTimestamp(instance) < value ||
+                                Utils.getNextMonthStartTimestamp(instance) > value;
+                if (isInRange) {
+                    mDatabase.getReference().child("statData").child(dataKey).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            final StatData statData = dataSnapshot.getValue(StatData.class);
+                            final String digitalTime = Utils.formatDigitalTime(statData.getTimeStamp());
+                            statData.setDataKey(dataSnapshot.getKey());
+                            statData.setDataMap(Utils.parseStringToSparseArray(statData.getDataString()));
+                            Log.i(TAG, "onChildAdded: Data date: " + digitalTime + " whit key: " + statData.getDataKey() + " and data is: " + statData.getDataString());
+                            if (dayInterval) {
+                                mListerner.onShortDataFetched(statData);
+                            } else {
+                                mListerner.onLongDataFetched(statData);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                }
 
             }
+        }
 
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
-    public interface OnDatabaseResultListerner {
+    public interface OnDatabaseResultListener {
         void onDataFetched(List<StatData> statData);
+
+        void onShortDataFetched(StatData statData);
+
+        void onLongDataFetched(StatData statDatas);
+
         void onCommentFetched(Comment comment);
     }
 
@@ -112,10 +158,15 @@ public class StatDatabaseHelper {
 
 
     @NonNull
-    public Comment insertComment(String text, String userName ) {
+    public Comment insertComment(String text, String userName) {
         final DatabaseReference commentReference = mDatabase.getReference();
         final String commentKey = commentReference.push().getKey();
-        mDatabase.getReference().child("student").child(mStudentKey).child(mIndex + "").child("commentsKeyMap").child(commentKey).setValue(true);
+        mDatabase.getReference()
+                .child("student")
+                .child(mStudentKey)
+                .child("commentsKeyMap")
+                .child(commentKey)
+                .setValue(true);
 
         final Comment comment = new Comment(text, Utils.getCurrentTimestamp(), userName);
         comment.setTag(Utils.hashtagFinder(text));

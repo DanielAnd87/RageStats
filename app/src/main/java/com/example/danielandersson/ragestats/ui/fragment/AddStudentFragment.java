@@ -86,7 +86,7 @@ public class AddStudentFragment extends Fragment {
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onSaveStudent(mNameEdittext.getText().toString(), mSpinner.getSelectedItemPosition());
+                mListener.onInsertStudent(mNameEdittext.getText().toString(), mSpinner.getSelectedItemPosition());
             }
         });
 
@@ -129,6 +129,6 @@ public class AddStudentFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        void onSaveStudent(String name, int groupPos);
+        void onInsertStudent(String name, int groupPos);
     }
 }

@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
@@ -12,16 +13,11 @@ import android.widget.RemoteViewsService;
 import com.example.danielandersson.ragestats.Data.Constants;
 import com.example.danielandersson.ragestats.Data.Group;
 import com.example.danielandersson.ragestats.Data.Student;
+import com.example.danielandersson.ragestats.MainDatabaseHelper;
 import com.example.danielandersson.ragestats.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static android.content.ContentValues.TAG;
 
@@ -38,6 +34,7 @@ public class GroupListIntentService extends RemoteViewsService {
     private FirebaseDatabase mFirebaseDatabase;
     private String mMyMemeberKey;
     private Context mContext;
+    private DataHelper mDataHelper;
 
 
     @Override
@@ -54,12 +51,14 @@ public class GroupListIntentService extends RemoteViewsService {
                 Log.i(TAG, "onCreate: Widget Service has started!");
 //                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 //                SharedPreferences preferences = getSharedPreferences( getPackageName() + "_preferences", MODE_PRIVATE);
-                mFirebaseDatabase = FirebaseDatabase.getInstance();
-                String groupKey = "-KqJTio7hIsv-1lboLAs";
+//                mFirebaseDatabase = FirebaseDatabase.getInstance();
+//                String groupKey = "-KthPqxJpvq33BhGRR4D";
 
-                if (getCount() == 0) {
-                    fetchData(groupKey);
-                }
+                mDataHelper = new DataHelper(getApplicationContext());
+//
+//                if (getCount() == 0) {
+//                    fetchData(groupKey);
+//                }
             }
 
             @Override
@@ -74,8 +73,10 @@ public class GroupListIntentService extends RemoteViewsService {
                 if (getCount() == 0) {
                     Log.i(TAG, "onDataSetChanged: " +
                             "zero items in list!");
-                    String groupKey = "-KtLlAl7eJMLXHXIFoql";
-                    fetchData(groupKey);
+                    String groupKey = "-KthPqxJpvq33BhGRR4D";
+//                    fetchData(groupKey);
+
+                    mDataHelper.fetchData(groupKey);
                 }
 
                 // TODO: 2017-08-09 use firebase db implementation
@@ -139,51 +140,130 @@ public class GroupListIntentService extends RemoteViewsService {
     }
 
 
-    public void fetchData(String groupKey) {
 
-        final DatabaseReference reference1 = mFirebaseDatabase.getReference(Constants.PATH_GROUP + "/" + groupKey + "/");
-        reference1.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Group fetchedGroup = dataSnapshot.getValue(Group.class);
-                if (fetchedGroup != null) {
-                    Log.i(TAG, "onDataChange: "
-                            + mGroup.getGroupName());
-                    final String key = dataSnapshot.getKey();
-                    mGroup = fetchedGroup;
-                    mGroup.setGroupKey(key);
 
-                    final DatabaseReference studentReference = mFirebaseDatabase.getReference(Constants.PATH_STUDENTS + "/" + mGroup.getStudentListKey() + "/");
 
-                    studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            final List<Student> studentList = dataSnapshot.getValue(new GenericTypeIndicator<List<Student>>() {
-                            });
-                            mGroup.setStudents((ArrayList<Student>) studentList);
-                            for (Student student : studentList) {
-                                Log.i(TAG, "onDataChange: " + student.getName());
-                            }
 
-                            GroupListWidget.sendUpdateBroadcast(mContext);
-                        }
 
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
+    private class DataHelper implements MainDatabaseHelper.OnAdapterCallBack {
+        private MainDatabaseHelper mMainDatabaseHelper;
 
-                        }
-                    });
-                }
+        DataHelper(Context context) {
+            mMainDatabaseHelper = new MainDatabaseHelper(
+                    context,
+                    this,
+                    PreferenceManager.getDefaultSharedPreferences(context));
+        }
 
+        public void fetchData(String groupKey) {
+            mMainDatabaseHelper.fetchGroup(groupKey);
+        }
+
+        @Override
+        public boolean addGroup(Group group) {
+            if (mGroup.getStudents().size() == 0) {
+                mGroup = group;
             }
+            return false;
+        }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
+        @Override
+        public void addStudent(Student student, String groupKey) {
+            if (!containsStudent(mGroup.getStudents(), student.getStudentKey())) {
+                mGroup.addStudent(student);
+                GroupListWidget.sendUpdateBroadcast(mContext);
             }
-        });
+        }
+
+        @Override
+        public Student getStudent(int studentPosition) {
+            return null;
+        }
+
+        @Override
+        public void updateStudent(String studentKey, String dataKey) {
+
+        }
 
 
     }
+
+
+//    public void fetchData(String groupKey) {
+//
+//        final Query query = mFirebaseDatabase.getReference("group").orderByKey();
+//
+//        query.equalTo(groupKey);
+//
+//        query.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//                final Group group = dataSnapshot.getValue(Group.class);
+//                final String key = dataSnapshot.getKey();
+//                group.setGroupKey(key);
+//
+//                Log.i(TAG, "onChildAdded: query success for: " + group.getGroupName());
+//
+//                final Map<String, Boolean> studentMap = group.getStudentMap();
+//                if (studentMap != null || studentMap.size() > 0) {
+//                    for (String keyString : studentMap.keySet()) {
+//                        mFirebaseDatabase.getReference().child("student").child(keyString).addValueEventListener(new ValueEventListener() {
+//                            @Override
+//                            public void onDataChange(DataSnapshot dataSnapshot) {
+//                                Student student = dataSnapshot.getValue(Student.class);
+//                                student.setStudentKey(dataSnapshot.getKey());
+//
+//                                if (!containsStudent(mGroup.getStudents(), dataSnapshot.getKey())) {
+//                                    mGroup.addStudent(student);
+//                                    GroupListWidget.sendUpdateBroadcast(mContext);
+//                                }
+//
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(DatabaseError databaseError) {
+//
+//                            }
+//                        });
+//                    }
+//
+//                }
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//
+//
+//    }
+
+    private boolean containsStudent(ArrayList<Student> students, String studentKey) {
+        for (Student student : students) {
+            if (student.getStudentKey().equals(studentKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // TODO: 2017-09-11 refactor MainDatabaseHelper to use a adapterListener
+    // TODO: 2017-09-11 create a inner class that uses the helper and the interface
 
 }

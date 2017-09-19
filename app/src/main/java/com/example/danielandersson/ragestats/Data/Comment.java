@@ -5,7 +5,6 @@ import com.google.firebase.database.Exclude;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -31,7 +30,6 @@ public class Comment {
 
     public Comment(String comment, long timeStamp, String memberName) {
         mComment = comment;
-        mTag = new ArrayList<>();
         mTimeStamp = timeStamp;
         mMemberName = memberName;
         setTimeAndDate();
@@ -48,7 +46,7 @@ public class Comment {
         mStudentKey = studentKey;
     }
 
-    public List<String> getTag() {
+    public List<String> getTags() {
         return mTag;
     }
 
@@ -108,4 +106,5 @@ public class Comment {
 
 
     }
+
 }

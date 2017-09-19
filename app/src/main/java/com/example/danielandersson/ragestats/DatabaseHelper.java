@@ -56,7 +56,8 @@ public class DatabaseHelper {
                 group.setGroup(fetchedGroup);
                 group.setGroupKey(key);
 
-                final DatabaseReference studentReference = mFirebaseDatabase.getReference(Constants.PATH_STUDENTS + "/" + group.getStudentListKey() + "/");
+                // FIXME: 2017-09-10 If you are going to use this class then fetch whit the hashset instead
+                final DatabaseReference studentReference = mFirebaseDatabase.getReference(Constants.PATH_STUDENTS + "/" + "/");
 
                 studentReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override

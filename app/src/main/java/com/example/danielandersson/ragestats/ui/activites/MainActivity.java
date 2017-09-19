@@ -27,7 +27,6 @@ import com.example.danielandersson.ragestats.ui.fragment.MainItemFragment;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 
@@ -39,7 +38,9 @@ public class MainActivity extends AppCompatActivity
         MainItemFragment.OnListFragmentInteractionListener,
         GroupDialogFragment.OnComfirmed,
         AddStudentFragment.OnFragmentInteractionListener,
-        CommentFragment.OnFragmentInteractionListener {
+        CommentFragment.OnFragmentInteractionListener,
+        MainDatabaseHelper.OnAdapterCallBack
+{
 
     private static final String GROUP_FRAGMENT_TAG = GroupDialogFragment.class.getSimpleName();
     private static final String STUDENT_FRAGMENT_TAG = AddStudentFragment.class.getSimpleName();
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mMainDatabaseHelper = new MainDatabaseHelper(FirebaseDatabase.getInstance(), this);
+        mMainDatabaseHelper = new MainDatabaseHelper(this, this, this.getPreferences(MODE_PRIVATE));
         setContentView(R.layout.activity_main);
         mFragmentManager = getSupportFragmentManager();
         mTransaction = mFragmentManager.beginTransaction();
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity
                 if (user != null) {
                     // User is signed in
                     mMainDatabaseHelper.onSignedInInitialize(user.getDisplayName(), user.getUid());
+//                    mMainDatabaseHelper.onSignedInInitialize(user.getDisplayName(), user.getUid());
                 } else {
                     // User is signed out
                     startActivityForResult(
@@ -162,8 +164,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onItemClick(Student student, String groupKey, String studentKey, int studentIndex) {
-        StatisticsActivity.start(MainActivity.this, studentIndex, student, groupKey, studentKey);
+    public void onItemClick(Student student, String groupKey, String studentKey) {
+        StatisticsActivity.start(MainActivity.this, student, groupKey, studentKey);
     }
 
     @Override
@@ -183,8 +185,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void pairAdapters(MyMainItemRecyclerViewAdapter adapter) {
-        mMainDatabaseHelper.setAdapter(adapter);
-        // FIXME: 2017-09-04 remove adapter field from Main
         mAdapter = adapter;
     }
 
@@ -203,8 +203,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void saveSmiley(int smileyIndex, Group group) {
-        mMainDatabaseHelper.saveSmiley(smileyIndex, group);
+    public void saveSmiley(Student student, int smileyValue) {
+        mMainDatabaseHelper.saveSmiley(student, smileyValue);
     }
 
     private void startAddGroupFragment(Group group, boolean isUpdating) {
@@ -268,10 +268,15 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public void onSaveStudent(String name, int groupPos) {
+    public void onInsertStudent(String name, int groupPos) {
 
         if (groupPos < mAdapter.getGroups().size()) {
-            mMainDatabaseHelper.saveStudent(name, groupPos);
+            Student student = new Student(name);
+            student.setStudentKey(
+                    mMainDatabaseHelper.insertStudent(student, mAdapter.getGroupKey(groupPos))
+            );
+            mAdapter.addStudent(student, groupPos);
+
         } else {
             mTemporaryStudentName = name;
             startAddGroupFragment(new Group(), false);
@@ -306,4 +311,25 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public boolean addGroup(Group group) {
+        final boolean groupWasAdded = mAdapter.addGroup(group);
+
+        return groupWasAdded;
+    }
+
+    @Override
+    public void addStudent(Student student, String groupKey) {
+        mAdapter.addStudent(student, groupKey);
+    }
+
+    @Override
+    public Student getStudent(int studentPosition) {
+        return mAdapter.getStudent(studentPosition);
+    }
+
+    @Override
+    public void updateStudent(String studentKey, String dataKey) {
+        mAdapter.updateStudent(studentKey, dataKey);
+    }
 }
