@@ -135,6 +135,8 @@ public class MainDatabaseHelper {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Student student = dataSnapshot.getValue(Student.class);
                                 student.setStudentKey(dataSnapshot.getKey());
+                                Log.i(TAG, "onDataChange: new student with name " +
+                                        student.getName());
                                 mListener.addStudent(student, group.getGroupKey());
 
                             }
@@ -184,7 +186,7 @@ public class MainDatabaseHelper {
         return studentKey;
     }
 
-    public void updateStudent(SparseIntArray dataMap, Student student) {
+    public void updateStudent(Student student) {
         final DatabaseReference dataReference = mDatabase.getReference();
         dataReference.child("student").child(student.getStudentKey()).setValue(student);
     }

@@ -1,5 +1,7 @@
 package com.example.danielandersson.ragestats.Data;
 
+import com.example.danielandersson.ragestats.R;
+
 /**
  * Created by danielandersson on 2017-07-10.
  */
@@ -22,4 +24,15 @@ public class Constants {
     public static final String LAST_DATA_INDEX = "last_data_index";
 
     public static final String WIDGET_ID_INTENT = "widget_id_intent";
+
+
+    public static int[] SMILEY_SRC = {
+            R.mipmap.happy_smiley,
+            R.mipmap.neutral_smiley,
+            R.mipmap.bad_smiley,
+            R.mipmap.really_bad_smiley,
+            R.mipmap.really_really_bad_smiley,
+    };
+
+    public static String TEMP_SMILEY_INDEX= "temp_smiley_index";
 }

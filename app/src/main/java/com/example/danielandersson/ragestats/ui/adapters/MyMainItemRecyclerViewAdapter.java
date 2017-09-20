@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.danielandersson.ragestats.Data.Constants;
 import com.example.danielandersson.ragestats.Data.Group;
 import com.example.danielandersson.ragestats.Data.Student;
 import com.example.danielandersson.ragestats.R;
@@ -28,15 +29,7 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
     private final Context mContext;
     private int mSize;
     private int[][] mIndexes;
-    private int mSmileyIndex;
 
-    private int[] mSmileySrc = {
-            R.mipmap.happy_smiley,
-            R.mipmap.neutral_smiley,
-            R.mipmap.bad_smiley,
-            R.mipmap.really_bad_smiley,
-            R.mipmap.really_really_bad_smiley,
-    };
 
     public MyMainItemRecyclerViewAdapter(ArrayList<Group> items, OnListFragmentInteractionListener listener, Context context) {
         mListener = listener;
@@ -151,17 +144,16 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
 
                         });
 
-
-                        // TODO: 2017-08-16 get restore correct index on start and save to db at end
+                        holderStudents.mSmileyBtn.setBackground(mContext.getDrawable(Constants.SMILEY_SRC[student.getSmileyIndex()]));
                         holderStudents.mSmileyBtn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                mSmileyIndex++;
-                                if (mSmileyIndex == mSmileySrc.length) {
-                                    mSmileyIndex = 0;
+                                student.addToSmileyIndex();
+                                if (student.getSmileyIndex() == Constants.SMILEY_SRC.length) {
+                                    student.setSmileyIndex(0);
                                 }
-                                holderStudents.mSmileyBtn.setBackground(mContext.getDrawable(mSmileySrc[mSmileyIndex]));
-                                mListener.saveSmiley(student, mSmileyIndex * 10);
+                                holderStudents.mSmileyBtn.setBackground(mContext.getDrawable(Constants.SMILEY_SRC[student.getSmileyIndex()]));
+                                mListener.saveSmiley(student, (student.getSmileyIndex() * 10) + 15);
                             }
                         });
                     }
@@ -205,8 +197,6 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
     }
 
     public boolean addGroup(Group group) {
-        final int groupSize = mGroups.size();
-
         for (Group currentGroup : mGroups) {
             if (currentGroup.getGroupKey().equals(group.getGroupKey())) return false;
         }
@@ -250,7 +240,6 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
         for (Group group : mGroups) {
             boolean containsStudent = containsStudent(group.getStudents(), student.getStudentKey());
             if (group.getGroupKey().equals(key) && !containsStudent) {
-//            if (group.getGroupKey().equals(key)) {
                 group.addStudent(student);
             }
         }
@@ -311,33 +300,15 @@ public class MyMainItemRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 }
 
             }
-
-            for (Student student : students) {
-                if (student.getStudentKey().equals(studentKey)) {
-
-                    return;
-                }
-            }
-
-
-
-            if (containsStudent(students, studentKey)) {
-                // replacing the student with the latest update.
-
-            }
         }
     }
 
     public class ViewHolderGroups extends RecyclerView.ViewHolder {
-        private View mView;
         private TextView mGroupLabelTextView = null;
         private Button mEditButton = null;
 
         public ViewHolderGroups(View view) {
             super(view);
-
-            mView = view;
-
             mGroupLabelTextView = (TextView) view.findViewById(R.id.group_label_textview);
             mEditButton = (Button) view.findViewById(R.id.edit_button_main);
         }

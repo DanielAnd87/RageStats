@@ -19,6 +19,15 @@ public class Student implements Parcelable {
     private HashMap<String, Boolean> mCommentsKeyMap;
     private HashMap<String, Long> mDataKeyMap;
     private long mLastDataSave;
+    private int mSmileyIndex;
+
+    public int getSmileyIndex() {
+        return mSmileyIndex;
+    }
+
+    public void setSmileyIndex(int smileyIndex) {
+        mSmileyIndex = smileyIndex;
+    }
 
     public Student(String name) {
         mName = name;
@@ -119,4 +128,8 @@ public class Student implements Parcelable {
             return new Student[size];
         }
     };
+
+    public void addToSmileyIndex() {
+        mSmileyIndex++;
+    }
 }

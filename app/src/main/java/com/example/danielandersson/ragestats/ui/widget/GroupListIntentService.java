@@ -3,6 +3,7 @@ package com.example.danielandersson.ragestats.ui.widget;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -35,6 +36,8 @@ public class GroupListIntentService extends RemoteViewsService {
     private String mMyMemeberKey;
     private Context mContext;
     private DataHelper mDataHelper;
+    private SharedPreferences mSharedPreferences;
+    private int mSmileyToUpdate;
 
 
     @Override
@@ -55,7 +58,8 @@ public class GroupListIntentService extends RemoteViewsService {
 //                String groupKey = "-KthPqxJpvq33BhGRR4D";
 
                 mDataHelper = new DataHelper(getApplicationContext());
-//
+                mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
 //                if (getCount() == 0) {
 //                    fetchData(groupKey);
 //                }
@@ -77,6 +81,14 @@ public class GroupListIntentService extends RemoteViewsService {
 //                    fetchData(groupKey);
 
                     mDataHelper.fetchData(groupKey);
+                } else {
+                    mSmileyToUpdate = mSharedPreferences.getInt(Constants.TEMP_SMILEY_INDEX, -1);
+                    if (mSmileyToUpdate != -1) {
+                        mGroup.getStudents().get(mSmileyToUpdate).addToSmileyIndex();
+                        SharedPreferences.Editor editor = mSharedPreferences.edit();
+                        editor.putInt(Constants.TEMP_SMILEY_INDEX, -1);
+                        editor.apply();
+                    }
                 }
 
                 // TODO: 2017-08-09 use firebase db implementation
@@ -107,11 +119,13 @@ public class GroupListIntentService extends RemoteViewsService {
                 // Construct the RemoteViews object for the list
                 RemoteViews views = new RemoteViews(getApplicationContext().getPackageName(), R.layout.fragment_main_student_item);
 
-
                 views.setTextViewText(R.id.student_name_main_list, student.getName());
-                // TODO: 2017-08-16 add clickListerners
-//                views.setTextViewText(R.id.smiley_button_main, student.getMeasure());
-//                views.setTextViewText(R.id.comment_button_main, student.getQuantity() + "");
+
+
+                Intent fillInIntent = new Intent();
+//                fillInIntent.putExtra(GroupListIntentService.EXTRA_LABEL, mCursor.getString(1));
+                views.setOnClickFillInIntent(R.id.list_item_container, fillInIntent);
+
 
                 return views;
             }
@@ -140,11 +154,6 @@ public class GroupListIntentService extends RemoteViewsService {
     }
 
 
-
-
-
-
-
     private class DataHelper implements MainDatabaseHelper.OnAdapterCallBack {
         private MainDatabaseHelper mMainDatabaseHelper;
 
@@ -163,6 +172,7 @@ public class GroupListIntentService extends RemoteViewsService {
         public boolean addGroup(Group group) {
             if (mGroup.getStudents().size() == 0) {
                 mGroup = group;
+                return true;
             }
             return false;
         }
@@ -188,72 +198,6 @@ public class GroupListIntentService extends RemoteViewsService {
 
     }
 
-
-//    public void fetchData(String groupKey) {
-//
-//        final Query query = mFirebaseDatabase.getReference("group").orderByKey();
-//
-//        query.equalTo(groupKey);
-//
-//        query.addChildEventListener(new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//                final Group group = dataSnapshot.getValue(Group.class);
-//                final String key = dataSnapshot.getKey();
-//                group.setGroupKey(key);
-//
-//                Log.i(TAG, "onChildAdded: query success for: " + group.getGroupName());
-//
-//                final Map<String, Boolean> studentMap = group.getStudentMap();
-//                if (studentMap != null || studentMap.size() > 0) {
-//                    for (String keyString : studentMap.keySet()) {
-//                        mFirebaseDatabase.getReference().child("student").child(keyString).addValueEventListener(new ValueEventListener() {
-//                            @Override
-//                            public void onDataChange(DataSnapshot dataSnapshot) {
-//                                Student student = dataSnapshot.getValue(Student.class);
-//                                student.setStudentKey(dataSnapshot.getKey());
-//
-//                                if (!containsStudent(mGroup.getStudents(), dataSnapshot.getKey())) {
-//                                    mGroup.addStudent(student);
-//                                    GroupListWidget.sendUpdateBroadcast(mContext);
-//                                }
-//
-//                            }
-//
-//                            @Override
-//                            public void onCancelled(DatabaseError databaseError) {
-//
-//                            }
-//                        });
-//                    }
-//
-//                }
-//            }
-//
-//            @Override
-//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onChildRemoved(DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
-//
-//
-//    }
-
     private boolean containsStudent(ArrayList<Student> students, String studentKey) {
         for (Student student : students) {
             if (student.getStudentKey().equals(studentKey)) {
@@ -262,8 +206,4 @@ public class GroupListIntentService extends RemoteViewsService {
         }
         return false;
     }
-
-    // TODO: 2017-09-11 refactor MainDatabaseHelper to use a adapterListener
-    // TODO: 2017-09-11 create a inner class that uses the helper and the interface
-
 }

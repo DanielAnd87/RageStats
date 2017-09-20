@@ -46,6 +46,8 @@
         <receiver android:name=".ui.widget.GroupListWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="action_smiley_updated" />
+                    />
             </intent-filter>
 
             <meta-data

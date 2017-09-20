@@ -24,6 +24,7 @@ import com.example.danielandersson.ragestats.ui.fragment.AddStudentFragment;
 import com.example.danielandersson.ragestats.ui.fragment.CommentFragment;
 import com.example.danielandersson.ragestats.ui.fragment.GroupDialogFragment;
 import com.example.danielandersson.ragestats.ui.fragment.MainItemFragment;
+import com.example.danielandersson.ragestats.ui.widget.GroupListWidget;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -157,6 +158,8 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            GroupListWidget.sendUpdateBroadcast(MainActivity.this);
+            GroupListWidget.sendSmileyUpdateBroadcast(MainActivity.this);
             return true;
         }
 
